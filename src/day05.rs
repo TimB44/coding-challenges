@@ -28,6 +28,10 @@ impl RangeSet {
             .next_back()
             .is_some_and(|(_, h)| q <= *h)
     }
+
+    fn count_ranges(&self) -> u64 {
+        self.ranges.iter().map(|(l, h)| h - l + 1).sum()
+    }
 }
 
 fn main() {
@@ -47,17 +51,6 @@ fn main() {
 
     let range_set = RangeSet::new(ranges);
 
-    let queries: Vec<u64> = stdin()
-        .lock()
-        .lines()
-        .map(Result::unwrap)
-        .map(|s| s.parse().unwrap())
-        .collect();
-
-    let in_range_count = queries
-        .into_iter()
-        .filter(|&q| range_set.in_range(q))
-        .count();
-
-    println!("Item in range = {in_range_count}");
+    let range_count = range_set.count_ranges();
+    println!("Item in all ranges = {range_count}");
 }
