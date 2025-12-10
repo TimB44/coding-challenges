@@ -1,16 +1,25 @@
 use std::io::{stdin, BufRead};
 
+const NUM_LEN: usize = 12;
+
 fn jotage(bytes: &[u8]) -> u64 {
-    let line_len = bytes.len();
-    let (i, n1) = bytes[0..(line_len - 1)]
-        .iter()
-        .enumerate()
-        .max_by_key(|(i, n)| (**n, -(*i as i64)))
-        .unwrap();
-
-    let n2 = bytes[(i + 1)..].iter().max().unwrap();
-
-    ((n1 - b'0') as u64) * 10 + ((n2 - b'0') as u64)
+    let mut result = 0;
+    let mut min_i = 0;
+    for i in 0..NUM_LEN {
+        result *= 10;
+        let max_i = bytes.len() - (NUM_LEN - i - 1);
+        let len_i = max_i - min_i;
+        let (digit_i, digit) = bytes
+            .iter()
+            .enumerate()
+            .skip(min_i)
+            .take(len_i)
+            .max_by_key(|(i, n)| (**n, -(*i as i64)))
+            .unwrap();
+        result += (digit - b'0') as u64;
+        min_i = digit_i + 1
+    }
+    result
 }
 
 fn main() {
@@ -30,13 +39,9 @@ mod test {
 
     #[test]
     fn jotage_test() {
-        assert_eq!(jotage(b"987654321111111"), 98);
-        assert_eq!(jotage(b"811111111111119"), 89);
-        assert_eq!(jotage(b"234234234234278"), 78);
-        assert_eq!(jotage(b"818181911112111"), 92);
-
-        assert_eq!(jotage(b"12"), 12);
-        assert_eq!(jotage(b"123"), 23);
-        assert_eq!(jotage(b"31"), 31);
+        assert_eq!(jotage(b"987654321111111"), 987654321111);
+        assert_eq!(jotage(b"811111111111119"), 811111111119);
+        assert_eq!(jotage(b"234234234234278"), 434234234278);
+        assert_eq!(jotage(b"818181911112111"), 888911112111);
     }
 }
