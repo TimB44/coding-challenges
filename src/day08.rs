@@ -60,22 +60,19 @@ fn main() {
         .collect();
 
     edges.sort_unstable_by(|l, r| l.2.total_cmp(&r.2));
-    edges.truncate(n);
 
     let mut set = DisjointSet::new(n);
+    let mut edge_count = 0;
     for (v1, v2, _) in edges {
-        dbg!(v1, v2);
+        if set.rep(v1) != set.rep(v2) {
+            edge_count += 1;
+        }
         set.union(v1, v2);
-    }
+        if edge_count == n - 1 {
+            let ans = ranges[v1][0] * ranges[v2][0];
+            println!("Answer = {ans}");
 
-    let mut map: HashMap<usize, usize> = HashMap::new();
-    for rep in (0..n).map(|i| set.rep(i)) {
-        map.entry(rep).and_modify(|v| *v += 1).or_insert(1);
+            break;
+        }
     }
-
-    let mut counts: Vec<_> = map.values().copied().collect();
-    let partition_point = counts.len() - 3;
-    counts.select_nth_unstable(partition_point);
-    let ans: usize = counts.iter().copied().rev().take(3).product();
-    println!("Answer = {ans}");
 }
