@@ -6,7 +6,7 @@ use std::{
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum BoardState {
     Unknown,
-    Filled,
+    Border,
     Outside,
 }
 
@@ -17,7 +17,7 @@ fn area([x1, y1]: [usize; 2], [x2, y2]: [usize; 2]) -> usize {
     width * height
 }
 
-fn minimize_dims(nums: BTreeSet<usize>) -> (HashMap<usize, usize>, usize) {
+fn minimize_nums(nums: BTreeSet<usize>) -> (HashMap<usize, usize>, usize) {
     let mut map = HashMap::new();
     map.insert(*nums.first().unwrap(), 0);
     let mut prev_minned = 0;
@@ -65,7 +65,7 @@ fn fill(grid: &mut [Vec<BoardState>], x: usize, y: usize) {
 fn is_inside(grid: &[Vec<BoardState>], x1: usize, y1: usize, x2: usize, y2: usize) -> bool {
     (y1.min(y2)..y1.max(y2))
         .flat_map(|y| (x1.min(x2)..x1.max(x2)).map(move |x| grid[y][x]))
-        .all(|bs| matches!(bs, BoardState::Filled | BoardState::Unknown))
+        .all(|bs| matches!(bs, BoardState::Border | BoardState::Unknown))
 }
 
 fn main() {
@@ -82,28 +82,29 @@ fn main() {
         .collect();
 
     let x_points: BTreeSet<_> = points.iter().map(|p| p[0]).collect();
-    let (x_points_map, width) = minimize_dims(x_points);
+    let (x_points_map, width) = minimize_nums(x_points);
 
     let y_points: BTreeSet<_> = points.iter().map(|p| p[1]).collect();
-    let (y_points_map, height) = minimize_dims(y_points);
+    let (y_points_map, height) = minimize_nums(y_points);
 
-    let mined_points: Vec<[usize; 2]> = points
+    let minimized_points: Vec<[usize; 2]> = points
         .iter()
         .map(|[x, y]| [x_points_map[x], y_points_map[y]])
         .collect();
 
     let mut grid = vec![vec![BoardState::Unknown; width]; height];
-    for points in
-        mined_points
-            .windows(2)
-            .chain([[mined_points[0], mined_points[mined_points.len() - 1]].as_slice()])
+    for points in minimized_points.windows(2).chain([[
+        minimized_points[0],
+        minimized_points[minimized_points.len() - 1],
+    ]
+    .as_slice()])
     {
         assert!(points.len() == 2);
         let [x1, y1] = points[0];
         let [x2, y2] = points[1];
         for y in y1.min(y2)..y1.max(y2) + 1 {
             for x in x1.min(x2)..x1.max(x2) + 1 {
-                grid[y][x] = BoardState::Filled;
+                grid[y][x] = BoardState::Border;
             }
         }
     }
@@ -138,7 +139,7 @@ mod test {
     #[test]
     fn minimize_dims_test() {
         assert_eq!(
-            minimize_dims(BTreeSet::from([1, 2, 4])),
+            minimize_nums(BTreeSet::from([1, 2, 4])),
             (HashMap::from([(1, 0), (2, 1), (4, 3)]), 3)
         );
     }
